@@ -1,6 +1,6 @@
 package custom_cookie_authenticator;
 
-import org.jboss.resteasy.util.HeaderHelper;
+import org.json.JSONObject;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.models.KeycloakSession;
@@ -24,10 +24,27 @@ public class CustomCookieAuthenticator implements Authenticator {
         logger.info("Authenticating, sending request");
         String response = "";
         try {
-            URL url = new URL("https://swapi.dev/api/people/1/");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            response = con.getResponseMessage();
+                // Set up the URL for the API call
+                String apiUrl = "https://swapi.dev/api/people/1/";
+                URL url = new URL(apiUrl);
+
+                // Set up the connection to the API endpoint
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+
+                // Read the response from the API endpoint
+                BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+                String output;
+                StringBuilder responseBuilder = new StringBuilder();
+                while ((output = br.readLine()) != null) {
+                    responseBuilder.append(output);
+                }
+                conn.disconnect();
+
+                // Parse the response as a JSON object
+                JSONObject jsonObject = new JSONObject(responseBuilder.toString());
+                response = jsonObject.getString("name");
         } catch (Exception e) {
             logger.error("Error with api request: " + e.getMessage());
         }
